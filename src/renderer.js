@@ -4,37 +4,40 @@ const mode = document.querySelector('#mode');
 const messages = document.querySelector('#messages');
 const send = document.querySelector('#send');
 
-function addMessage(text, role) {
-  const div = document.createElement('div');
-  div.className = `message ${role}`;
-  div.textContent = text;
-  messages.appendChild(div);
+const history = [{ role: 'system', content: 'Tu es Ares, un assistant utile, clair, prudent et concis. Réponds en français.' }];
+
+function addMessage(text, role = 'assistant', extraClass = '') {
+  const element = document.createElement('div');
+  element.className = `message ${role} ${extraClass}`.trim();
+  element.textContent = text;
+  messages.appendChild(element);
   messages.scrollTop = messages.scrollHeight;
-  return div;
+  return element;
 }
 
-async function requestLocal(text) {
-  const response = await fetch('http://127.0.0.1:11434/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'qwen2.5:1.5b',
-      stream: false,
-      messages: [
-        { role: 'system', content: 'Tu es Ares, un assistant utile, clair et concis.' },
-        { role: 'user', content: text }
-      ]
-    })
-  });
-  if (!response.ok) throw new Error(`Ollama indisponible (${response.status})`);
-  const data = await response.json();
-  return data.message?.content || 'Aucune réponse reçue.';
-}
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const text = prompt.value.trim();
+  if (!text || send.disabled) return;
 
-async function requestOnline(text) {
-  return window.ares.askOnline(text);
-}
+  prompt.value = '';
+  send.disabled = true;
+  addMessage(text, 'user');
+  history.push({ role: 'user', content: text });
+  const pending = addMessage('Réflexion…');
 
-form.addEventListener('submit', async event => {
-  event.prevent.preventDefault;
+  try {
+    const answer = mode.value === 'local'
+      ? await window.ares.askLocal(history)
+      : await window.ares.askOnline(history);
+    pending.remove();
+    addMessage(answer);
+    history.push({ role: 'assistant', content: answer });
+  } catch (error) {
+    pending.remove();
+    addMessage(error.message || 'Une erreur est survenue.', 'assistant', 'error');
+  } finally {
+    send.disabled = false;
+    prompt.focus();
+  }
 });
