@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ares</title>
+  <style>
+    :root{color-scheme:dark}body{margin:0;font-family:sans-serif;background:#090d18;color:white}main{max-width:800px;margin:auto;height:100vh;padding:16px;display:grid;grid-template-rows:auto 1fr auto}h1{letter-spacing:.1em}#messages{overflow:auto}form{display:grid;grid-template-columns:1fr auto;gap:8px}textarea,input,button{border:1px solid #263252;border-radius:10px;padding:12px;background:#171f35;color:white;font:inherit}button{background:#67d7c5;color:#081410;font-weight:bold}.message{margin:10px 0;padding:12px;border-radius:10px;white-space:pre-wrap}.user{margin-left:20%;background:#20345a}.assistant{margin-right:20%;background:#11182a}#settings{display:none;grid-template-columns:1fr auto;gap:8px;margin-bottom:10px}#settings.open{display:grid}
+  </style>
+</head>
+<body>
+<main>
+  <header><h1>ARES</h1><button id="openSettings">Clé API</button></header>
+  <div id="settings"><input id="key" type="password" placeholder="Votre clé API OpenAI"><button id="save">Enregistrer</button></div>
+  <section id="messages"><div class="message assistant">Bonjour ! Ajoutez votre clé API pour commencer.</div></section>
+  <form id="form"><textarea id="prompt" placeholder="Parlez à Ares…"></textarea><button>Envoyer</button></form>
+</main>
+<script>
+const messages=document.querySelector("#messages"),prompt=document.querySelector("#prompt"),form=document.querySelector("#form"),settings=document.querySelector("#settings"),key=document.querySelector("#key");
+key.value=sessionStorage.getItem("ares-key")||"";
+document.querySelector("#openSettings").onclick=()=>settings.classList.toggle("open");
+document.querySelector("#save").onclick=()=>{sessionStorage.setItem("ares-key",key.value.trim());settings.classList.remove("open")};
+const history=[{role:"system",content:"Tu es Ares, un assistant utile, concis et francophone."}];
+form.onsubmit=async event=>{
+ event.preventDefault();
+ const text=prompt.value.trim(),token=sessionStorage.getItem("ares-key");
+ if(!text)return;
+ if(!token){settings.classList.add("open");key.focus();return}
+ prompt.value="";
+ messages.insertAdjacentHTML("beforeend",`<div class="message user"></div>`).;
+ messages.lastElementChild.textContent=text;
+ history.push({role:"user",content:text});
+ const waiting=document.createElement("div");waiting.className="message assistant";waiting.textContent="Réflexion…";messages.append(waiting);
+ try{
+  const response=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify({model:"gpt-4o-mini",messages:history})});
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.error?.message||"Erreur API");
+  waiting.textContent=data.choices[0].message.content;
+  history.push({role:"assistant",content:waiting.textContent});
+ }catch(error){waiting.textContent=error.message}
+};
+</script>
+</body>
+</html>
