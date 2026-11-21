@@ -1,38 +1,27 @@
 # Ares
 
-Ares est un assistant IA multi-plateformes destiné à fonctionner sous Windows, macOS et Linux.
+Ares est un assistant IA bureau pour Windows, macOS et Linux.
 
-## Fonctionnalités prévues
+## Modes
 
-- Mode local gratuit basé sur Ollama
-- Mode en ligne avec clé API personnelle de l'utilisateur
-- Interface bureau simple
-- Installation Windows, macOS et Linux
+- **Local gratuit** : modèle léger via Ollama.
+- **En ligne** : clé API personnelle saisie dans les paramètres.
 
-## Développement
+Aucune clé API n'est intégrée au dépôt.
 
-```bash
-npm install
-npm start
-```
+## Installation
 
-## Mode local
+1. Installez Node.js 20 ou une version récente.
+2. Installez Ollama depuis https://ollama.com/download.
+3. Téléchargez le modèle : `ollama pull qwen2.5:1.5b`
+4. Lancez : `npm install && npm start`
 
-1. Installe Ollama: https://ollama.com/download
-2. Télécharge le petit modèle léger:
+## Configuration en ligne
 
-```bash
-ollama pull qwen2.5:1.5b
-```
+Ouvrez **Paramètres**, saisissez votre clé API personnelle et enregistrez-la. Elle est chiffrée localement lorsque le système le permet.
 
-3. Lance Ares avec `npm start`.
+## Build
 
-## Construction des installateurs
-
-```bash
-npm run build:win
-npm run build:mac
-npm run build:linux
-```
-
-> Ne placez jamais une clé API dans les fichiers publiés du dépôt.
+- Windows : `npm run build:win`
+- macOS : `npm run build:mac`
+- Linux : `npm run build:linux`
